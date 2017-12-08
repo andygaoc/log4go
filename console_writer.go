@@ -38,10 +38,12 @@ type ConsoleWriter struct {
 }
 
 func NewConsoleWriter() *ConsoleWriter {
+	//	fmt.Printf("ConsoleWriter\n")
 	return &ConsoleWriter{}
 }
 
 func (w *ConsoleWriter) Write(r *Record) error {
+	//fmt.Printf("ConsoleWriter\n")
 	if w.color {
 		fmt.Fprint(os.Stdout, ((*colorRecord)(r)).String())
 	} else {

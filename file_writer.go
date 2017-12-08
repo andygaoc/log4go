@@ -14,6 +14,9 @@ var pathVariableTable map[byte]func(*time.Time) int
 
 type FileWriter struct {
 	pathFmt       string
+	filepath      string
+	fileIndex     int
+	maxsize       int64
 	file          *os.File
 	fileBufWriter *bufio.Writer
 	actions       []func(*time.Time) int
@@ -27,7 +30,9 @@ func NewFileWriter() *FileWriter {
 func (w *FileWriter) Init() error {
 	return w.Rotate()
 }
-
+func (w *FileWriter) SetMaxSize(size int64) {
+	w.maxsize = size
+}
 func (w *FileWriter) SetPathPattern(pattern string) error {
 	n := 0
 	for _, c := range pattern {
@@ -77,6 +82,7 @@ func (w *FileWriter) Write(r *Record) error {
 }
 
 func (w *FileWriter) Rotate() error {
+	fmt.Printf("FileWriter rotater\n")
 	now := time.Now()
 	v := 0
 	rotate := false
@@ -88,7 +94,14 @@ func (w *FileWriter) Rotate() error {
 			rotate = true
 		}
 	}
-
+	if w.maxsize > 0 {
+		file, err := os.Lstat(w.filepath)
+		if err == nil {
+			if file.Size() >= w.maxsize {
+				rotate = true
+			}
+		}
+	}
 	if rotate == false {
 		return nil
 	}
@@ -104,9 +117,16 @@ func (w *FileWriter) Rotate() error {
 			return err
 		}
 	}
-
-	filePath := fmt.Sprintf(w.pathFmt, w.variables...)
-
+	var filePath string
+	for i := 0; i < 20; i++ {
+		filePath = fmt.Sprintf(w.pathFmt+"_%d.log", append(w.variables, w.fileIndex)...)
+		w.fileIndex++
+		fmt.Println("filePath", filePath)
+		_, err := os.Lstat(filePath)
+		if err != nil {
+			break
+		}
+	}
 	if err := os.MkdirAll(path.Dir(filePath), 0755); err != nil {
 		if !os.IsExist(err) {
 			return err
@@ -117,6 +137,7 @@ func (w *FileWriter) Rotate() error {
 		return err
 	} else {
 		w.file = file
+		w.filepath = filePath
 	}
 
 	if w.fileBufWriter = bufio.NewWriterSize(w.file, 8192); w.fileBufWriter == nil {

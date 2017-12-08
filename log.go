@@ -83,6 +83,7 @@ func (l *Logger) Register(w Writer) {
 		panic(err)
 	}
 	l.writers = append(l.writers, w)
+	//fmt.Println(l.writers)
 }
 
 func (l *Logger) SetLevel(lvl int) {
@@ -193,6 +194,7 @@ func boostrapLogWriter(logger *Logger) {
 				return
 			}
 
+			//	fmt.Println(logger.writers)
 			for _, w := range logger.writers {
 				if err := w.Write(r); err != nil {
 					log.Println(err)
