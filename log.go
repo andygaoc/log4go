@@ -141,7 +141,7 @@ func (l *Logger) deliverRecordToWriter(level int, format string, args ...interfa
 	}
 
 	// source code, file and line num
-	_, file, line, ok := runtime.Caller(2)
+	_, file, line, ok := runtime.Caller(3)
 	if ok {
 		code = path.Base(file) + ":" + strconv.Itoa(line)
 	}
